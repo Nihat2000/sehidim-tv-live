@@ -1,7 +1,7 @@
 name: Catcast Canli Yayim
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Actions bölməsindən əllə başlatmaq üçün
 
 jobs:
   stream:
@@ -16,6 +16,6 @@ jobs:
       - name: Yayimi Baslat
         run: |
           ffmpeg -re -stream_loop -1 -i video1.mp4 \
-          -i logo.png -filter_complex "overlay=W-w-20:20" \
+          -i logo.png -filter_complex "[1:v]scale=150:-1 [logo]; [0:v][logo]overlay=W-w-20:20" \
           -vcodec libx264 -preset veryfast -b:v 2000k -maxrate 2000k -bufsize 4000k \
           -pix_fmt yuv420p -c:a aac -b:a 128k -f flv "rtmp://s.catcast.tv/live/sehidimtv?key=27322_50574_8644e16863c6d6e6"
