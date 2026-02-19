@@ -1,30 +1,19 @@
-name: Catcast Canli Yayim (Loop Fix)
-
-on:
-  workflow_dispatch:
-
-jobs:
-  stream:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fayllari Gotur
-        uses: actions/checkout@v3
-
-      - name: FFmpeg Qurasdir
-        run: sudo apt update && sudo apt install -y ffmpeg curl
-
-      - name: En Son Tokenli Linki Tap və Yayımı Başlat
+- name: Tam Təkmilləşdirilmiş Yayım Scripti
         run: |
-          # Tokenli linki çəkir
+          # Tokenli linki çəkir (Əgər RTMP linkiniz dəyişirsə bu qalsın)
           STREAM_URL=$(curl -s https://catcast.tv/sehidimtv | grep -oP 'https://s.catcast.tv/[^"]+index.m3u8\?token=[a-zA-Z0-9]+' | head -n 1)
-          echo "Tapılan Link: $STREAM_URL"
-
-          # QƏTİ HƏLL:
-          # '-stream_loop -1' əmri '-f concat'-dan ƏVVƏL gəlməlidir.
-          # Əlavə olaraq '-fflags +genpts' əlavə etdik ki, videolar arası keçiddə vaxt itməsin və təkrar davam etsin.
           
-          ffmpeg -re -stream_loop -1 -f concat -safe 0 -i list.txt \
+          # Əsas Sabit RTMP Linkiniz (Əgər key dəyişmirsə birbaşa bunu istifadə edin):
+          TARGET_RTMP="rtmp://s.catcast.tv/live/sehidimtv?key=27322_50574_8644e16863c6d6e6"
+
+          ffmpeg -re -f concat -safe 0 -stream_loop -1 -i list.txt \
           -stream_loop -1 -i logo.png \
-          -filter_complex "[0:v]scale=1280:720,setsar=1[main]; [1:v]scale=120:-1[l_img]; [main][l_img]overlay=W-w-30:30" \
+          -filter_complex "[0:v]scale=1280:720,setsar=1,fps=25[main]; \
+                           [1:v]scale=120:-1[l_img]; \
+                           [main][l_img]overlay=W-w-30:30[outv]; \
+                           [0:a]aresample=44100,aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo[outa]" \
+          -map "[outv]" -map "[outa]" \
           -vcodec libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
-          -pix_fmt yuv420p -fflags +genpts -c:a aac -b:a 128k -f flv "rtmp://s.catcast.tv/live/sehidimtv?key=27322_50574_8644e16863c6d6e6"
+          -pix_fmt yuv420p -g 50 -fflags +genpts+igndts+discardcorrupt \
+          -c:a aac -b:a 128k -ar 44100 \
+          -f flv "$TARGET_RTMP"
