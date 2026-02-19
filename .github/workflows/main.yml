@@ -1,4 +1,4 @@
-name: Catcast Canli Yayim (1080p Playlist)
+name: Catcast Canli Yayim (720p Playlist Fix)
 
 on:
   workflow_dispatch:
@@ -20,11 +20,11 @@ jobs:
           
           echo "Tapılan Link: $STREAM_URL"
 
-          # 1080p YAYIM AYARLARI:
-          # scale=1920:1080 -> Bütün videoları Full HD edir
-          # -b:v 4500k -> 1080p üçün daha yüksək bitreyt (keyfiyyət)
+          # HƏLL YOLU: 
+          # 1. '-stream_loop -1' əmrini '-f concat'-dan əvvəl qoyuruq (Sonsuz təkrar üçün)
+          # 2. Bütün videoları əvvəlcə 1280x720 edirik, sonra loqonu overlay edirik.
           
           ffmpeg -re -stream_loop -1 -f concat -safe 0 -i list.txt \
-          -i logo.png -filter_complex "[0:v]scale=1920:1080,setsar=1[v_base]; [1:v]scale=150:-1[v_logo]; [v_base][v_logo]overlay=W-w-40:40" \
-          -vcodec libx264 -preset veryfast -b:v 4500k -maxrate 4500k -bufsize 9000k \
-          -pix_fmt yuv420p -c:a aac -b:a 192k -f flv "rtmp://s.catcast.tv/live/sehidimtv?key=27322_50574_8644e16863c6d6e6"
+          -i logo.png -filter_complex "[0:v]scale=1280:720,setsar=1[main]; [1:v]scale=120:-1[l_img]; [main][l_img]overlay=W-w-30:30" \
+          -vcodec libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
+          -pix_fmt yuv420p -c:a aac -b:a 128k -f flv "rtmp://s.catcast.tv/live/sehidimtv?key=27322_50574_8644e16863c6d6e6"
