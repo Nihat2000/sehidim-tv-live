@@ -1,0 +1,21 @@
+name: Catcast Canli Yayim
+
+on:
+  workflow_dispatch: # Bu düyməni basanda yayım başlayacaq
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fayllari Gotur
+        uses: actions/checkout@v3
+
+      - name: FFmpeg Qurasdir
+        run: sudo apt update && sudo apt install -y ffmpeg
+
+      - name: Yayimi Baslat
+        run: |
+          ffmpeg -re -stream_loop -1 -f concat -safe 0 -i list.txt \
+          -i logo.png -filter_complex "overlay=W-w-20:20" \
+          -vcodec libx264 -preset veryfast -b:v 2500k -maxrate 2500k -bufsize 5000k \
+          -acodec aac -b:a 128k -ar 44100 -f flv "rtmp://s.catcast.tv/live/sehidimtv?key=27322_50574_8644e16863c6d6e6"
