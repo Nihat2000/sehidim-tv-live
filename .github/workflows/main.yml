@@ -21,7 +21,7 @@ jobs:
           echo "Tapılan Link: $STREAM_URL"
 
           # FFmpeg loqo tənzimləməsi:
-          # scale=120:-1 -> Loqonu 120px enində edir (bir az daha balaca və estetik)
+          # scale=120:-1 -> Loqonu 180px enində edir (bir az daha balaca və estetik)
           # overlay=W-w-30:30 -> Sağdan 30px, Yuxarıdan 30px məsafə qoyur
           ffmpeg -re -stream_loop -1 -i video1.mp4 \
           -i logo.png -filter_complex "[1:v]scale=120:-1 [logo]; [0:v][logo]overlay=W-w-30:30" \
