@@ -1,4 +1,4 @@
-name: Catcast Canli Yayim
+name: Catcast Canli Yayim (Playlist)
 
 on:
   workflow_dispatch:
@@ -15,15 +15,17 @@ jobs:
 
       - name: En Son Tokenli Linki Tap və Yayımı Başlat
         run: |
-          # Səhifədən m3u8 linkini və tokeni avtomatik çəkir
+          # Catcast səhifəsindən aktiv m3u8 linkini və tokeni avtomatik çəkir
           STREAM_URL=$(curl -s https://catcast.tv/sehidimtv | grep -oP 'https://s.catcast.tv/[^"]+index.m3u8\?token=[a-zA-Z0-9]+' | head -n 1)
           
           echo "Tapılan Link: $STREAM_URL"
 
-          # FFmpeg loqo tənzimləməsi:
-          # scale=120:-1 -> Loqonu 180px enində edir (bir az daha balaca və estetik)
-          # overlay=W-w-30:30 -> Sağdan 30px, Yuxarıdan 30px məsafə qoyur
-          ffmpeg -re -stream_loop -1 -i video1.mp4 \
-          -i logo.png -filter_complex "[1:v]scale=120:-1 [logo]; [0:v][logo]overlay=W-w-30:30" \
+          # FFmpeg Siyahı (Playlist) yayımı:
+          # -f concat -safe 0 -> list.txt içindəki videoları ardıcıl birləşdirir
+          # -stream_loop -1 -> Siyahı bitəndə yenidən başa qayıdır
+          # filter_complex içində 'scale=1280:720' əlavə etdik ki, fərqli ölçülü videolar yayımı dayandırmasın.
+          
+          ffmpeg -re -f concat -safe 0 -stream_loop -1 -i list.txt \
+          -i logo.png -filter_complex "[0:v]scale=1280:720 [base]; [1:v]scale=120:-1 [logo]; [base][logo]overlay=W-w-30:30" \
           -vcodec libx264 -preset veryfast -b:v 2000k -maxrate 2000k -bufsize 4000k \
           -pix_fmt yuv420p -c:a aac -b:a 128k -f flv "rtmp://s.catcast.tv/live/sehidimtv?key=27322_50574_8644e16863c6d6e6"
